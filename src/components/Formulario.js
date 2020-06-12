@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import styled from "@emotion/styled"
-import {obtenerDiferenciaYear, calcularMArca} from '../helper'
+import styled from "@emotion/styled";
+import { obtenerDiferenciaYear, calcularMArca, obtenerPlan } from "../helper";
+import PropTypes from 'prop-types'
 
 const Campo = styled.div`
   display: flex;
@@ -47,14 +48,14 @@ const Error = styled.div`
   margin-bottom: 2rem;
 `;
 
-const Formulario = () => {
+const Formulario = ({ guardarResumen, guardarCargando }) => {
   const [datos, guradarDatos] = useState({
     marca: "",
     year: "",
     plan: "",
   });
 
-  const [error, guardarError] = useState(false); 
+  const [error, guardarError] = useState(false);
   // extraer los valores del state
 
   const { marca, year, plan } = datos;
@@ -77,7 +78,7 @@ const Formulario = () => {
       return;
     }
     guardarError(false);
-    
+
     // Obtener una base de 2000
     let resultado = 2000;
 
@@ -86,20 +87,34 @@ const Formulario = () => {
     console.log(diferencia);
 
     // por cada año hay que restar el 3%
-    resultado -= ((diferencia * 3)*resultado)/100
-    console.log(resultado);
+    resultado -= (diferencia * 3 * resultado) / 100;
 
     // Americano 15
     // Asiatico 5%
     // Europeo 30
 
     resultado = calcularMArca(marca) * resultado;
-    console.log(resultado);
 
     //Basico aumenta el 20%
     // Completo 50%
+    const incrementoPlan = obtenerPlan(plan);
+    resultado = parseFloat(incrementoPlan * resultado).toFixed(2);
+
+    guardarCargando(true);
+
+    setTimeout(() => {
+      guardarCargando(false);
+      guardarResumen({
+        cotizacion: resultado,
+        datos,
+      });
+    }, 3000);
 
     // Total
+    guardarResumen({
+      cotizacion: resultado,
+      datos,
+    });
   };
   return (
     <form onSubmit={cotizarSeguro}>
@@ -115,7 +130,7 @@ const Formulario = () => {
       </Campo>
       <Campo>
         <Label>Año</Label>
-        <Select name="year" value="year" onChange={obtenerInformacion}>
+        <Select name="year" value={datos.year} onChange={obtenerInformacion}>
           <option value="">-- Seleccione --</option>
           <option value="2021">2021</option>
           <option value="2020">2020</option>
@@ -154,4 +169,9 @@ const Formulario = () => {
   );
 };
 
+Formulario.propType = {
+    guardarCargando: PropTypes.func.isRequired,
+    guardarResumen: PropTypes.func.isRequired,
+
+}
 export default Formulario;
